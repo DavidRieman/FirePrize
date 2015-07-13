@@ -3,6 +3,40 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <TabControl>
+            <TabItem x:Name="prizePoolTab" Header="_Prize Pools">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel Grid.Column="0">
+                        <Label DockPanel.Dock="Top">Prize Pools</Label>
+                        <DockPanel DockPanel.Dock="Bottom">
+                            <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click">Add</Button>
+                            <TextBox x:Name="newPrizePoolName" HorizontalAlignment="Stretch" />
+                        </DockPanel>
+                        <ListBox/>
+                    </DockPanel>
+                    <StackPanel Grid.Column="1">
+                        
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="playersTab" Header="Pla_yers">
+                <StackPanel>
+                    
+                </StackPanel>
+            </TabItem>
+            <TabItem x:Name="drawingTab" Header="Drawing">
+                <StackPanel>
+                    
+                </StackPanel>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

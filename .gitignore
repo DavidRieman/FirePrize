@@ -3,3 +3,7 @@
 
 /Source/FirePrize/bin
 /Source/FirePrize/obj
+/Source/packages/Microsoft.Bcl.*
+/Source/packages/Microsoft.Net.Http.2.2.28
+/Source/packages/Newtonsoft.Json.6.0.4
+/Source/FirePrize/FirePrize_TemporaryKey.pfx
