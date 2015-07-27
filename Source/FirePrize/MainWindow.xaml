@@ -14,12 +14,19 @@
                     <DockPanel Grid.Column="0">
                         <Label DockPanel.Dock="Top">Prize Pools</Label>
                         <DockPanel DockPanel.Dock="Bottom">
-                            <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click">Add</Button>
+                            <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click">Add Pool</Button>
                             <TextBox x:Name="newPrizePoolName" HorizontalAlignment="Stretch" />
                         </DockPanel>
-                        <ListBox/>
+                        <ListBox x:Name="TestListBox" ItemsSource="{Binding PrizePools}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </DockPanel>
                     <StackPanel Grid.Column="1">
+                        <Label DockPanel.Dock="Top">Prizes</Label>
                         
                     </StackPanel>
                     <StackPanel Grid.Column="2">

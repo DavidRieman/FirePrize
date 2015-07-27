@@ -8,13 +8,20 @@ namespace FirePrize
 {
     public class PrizePool
     {
+        public PrizePool()
+        {
+            this.Prizes = new List<Prize>();
+            this.ID = Guid.NewGuid();
+        }
+
         public PrizePool(string name)
+            : this()
         {
             this.Name = name;
-            this.Prizes = new List<Prize>();
         }
 
         public string Name { get; set; }
+        public Guid ID { get; set; }
         public List<Prize> Prizes { get; set; }
     }
 }
