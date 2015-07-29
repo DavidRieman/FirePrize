@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,8 @@ namespace FirePrize
 
         public string Name { get; set; }
         public Guid ID { get; set; }
+
+        [JsonIgnore]
         public List<Prize> Prizes { get; set; }
     }
 }

@@ -1,28 +1,108 @@
 ﻿using FireSharp.EventStreaming;
 using FireSharp.Interfaces;
+using KellermanSoftware.CompareNetObjects;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace FirePrize
 {
-    public class FirebaseTrackedObject<T>
+    public class FireCollection<T> : IEnumerable<T>, INotifyCollectionChanged
+        where T : new()
     {
-        public string Path { get; set; }
-        public T Object { get; set; }
+        private IFirebaseClient firebase;
+        private List<T> list = new List<T>();
+        private LogicEqualityComparer<T> comparer = new LogicEqualityComparer<T>();
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged = delegate { };
+
+        public FireCollection(IFirebaseClient firebase, string name)
+        {
+            this.firebase = firebase;
+            this.Name = name;
+
+            ValueRootAddedEventHandler<IEnumerable<T>> addedHandler = (s, newObjects) =>
+            {
+                // May be null upon startup if the Firebase DB has not yet been (re)created; just ignore as we 
+                // will start getting updates when we actually add our first object, etc.
+                if (newObjects == null)
+                {
+                    return;
+                }
+
+                // Locate any removals and additions which need to occur, before we have to move to the UI thread.
+                // This will allow us to avoid clearing the list / making unnecessary jarring UI changes.
+                var removals = this.list.Except(newObjects, comparer).ToList();
+                var additions = newObjects.Except(this.list, comparer).Where(p => p != null).ToList();
+
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    foreach (T removal in removals)
+                    {
+                        this.list.Remove(removal);
+                    }
+                    foreach (T addition in additions)
+                    {
+                        this.list.Add(addition);
+                    }
+                    var changeArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null);
+                    CollectionChanged(s, changeArgs);
+                }));
+            };
+            firebase.OnChangeGetAsync(name, addedHandler);
+        }
+
+        public string Name { get; private set; }
+
+        public void Add(T obj)
+        {
+            if (!this.list.Contains(obj))
+            {
+                // Send a new list with the addition to Firebase, so UI updates in sync with Firebase confirmation callback.
+                // Intentionally synchronous so we can't get conflicting list sets from multiple competing Adds, etc.
+                this.list.Add(obj);
+                this.firebase.Set(this.Name, this.list);
+            }
+        }
+
+        public void Remove(T obj)
+        {
+            if (this.list.Contains(obj))
+            {
+                // Send a new list with the removal to Firebase, so UI updates in sync with Firebase confirmation callback.
+                // Intentionally synchronous so we can't get conflicting list sets from multiple competing Removes, etc.
+                this.list.Remove(obj);
+                this.firebase.Set(this.Name, this.list);
+            }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return this.list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.list.GetEnumerator();
+        }
     }
 
+    /* This approach turned out to be really problematic due to the handlers NOT giving us full objects
+     * pre-constructed, but having to try to rebuild objects based on path alone; lots of problems and
+     * complications would lay ahead with that road. Redesigning to track observable collections as 
+     * individual Firebase objects, which will have its own issues with having to update all changes to
+     * the whole collection together (which raises risk of data loss from parallel changes, and so on).
     public class FireList<T> : IEnumerable<T>, INotifyCollectionChanged where T : new()
     {
+        public class FirebaseTrackedObject<T>
+        {
+            public string Path { get; set; }
+            public T Object { get; set; }
+        }
+
         private static char[] PathSplitChars = new[] { '/' };
 
         private IFirebaseClient firebase;
@@ -151,4 +231,5 @@ namespace FirePrize
             return this.Items.GetEnumerator();
         }
     }
+    */
 }

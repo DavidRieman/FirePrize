@@ -6,22 +6,27 @@ using KellermanSoftware.CompareNetObjects;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace FirePrize
 {
     /// <summary>Interaction logic for MainWindow.xaml</summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private IFirebaseClient firebase;
-        private LogicEqualityComparer<PrizePool> prizePoolComparer = new LogicEqualityComparer<PrizePool>();
 
-        public ObservableCollection<PrizePool> PrizePools { get; set; }
+        public FireCollection<PrizePool> PrizePools { get; set; }
+        public List<FireCollection<Prize>> PrizeMap { get; set; }
+        public FireCollection<Prize> SelectedPrizePoolPrizes { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
         public MainWindow()
         {
-            PrizePools = new ObservableCollection<PrizePool>();
+            this.PrizeMap = new List<FireCollection<Prize>>();
 
             InitializeComponent();
 
@@ -36,66 +41,44 @@ namespace FirePrize
             };
             firebase = new FirebaseClient(config);
 
-            ValueRootAddedEventHandler<IEnumerable<PrizePool>> addedHandler = (s, newObjects) =>
-            {
-                // May be null upon startup if the Firebase DB has not yet been (re)created; just ignore as we 
-                // will start getting updates when we actually add our first object, etc.
-                if (newObjects == null)
-                {
-                    return;
-                }
-
-                // Locate any removals and additions which need to occur, before we have to move to the UI thread.
-                // This will allow us to avoid clearing the list / making unnecessary jarring UI changes.
-                var removals = this.PrizePools.Except(newObjects, prizePoolComparer).ToList();
-                var additions = newObjects.Except(this.PrizePools, prizePoolComparer).Where(p => p != null).ToList();
-
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    foreach (PrizePool removal in removals)
-                    {
-                        this.PrizePools.Remove(removal);
-                    }
-                    foreach (PrizePool addition in additions)
-                    {
-                        this.PrizePools.Add(addition);
-                    }
-                }));
-            };
-            firebase.OnChangeGetAsync("prizePools", addedHandler);
-
-            //firebase.OnAsync("prizePools", (s, a) =>
-            //{
-            //    Console.WriteLine("ADD!");
-            //}, (s, a) =>
-            //{
-            //    Console.WriteLine("CHANGE!");
-            //}, (s, a) =>
-            //{
-            //    Console.WriteLine("REMOVE!");
-            //});
+            this.PrizePools = new FireCollection<PrizePool>(firebase, "prizePools");
         }
 
         public static PrizePool lastTrackedPool;
 
-        private async void NewPrizePool_Click(object sender, RoutedEventArgs e)
+        private void NewPrizePool_Click(object sender, RoutedEventArgs e)
         {
-            string name = this.newPrizePoolName.Text;
-            if (string.IsNullOrWhiteSpace(name))
+            string poolName = this.newPrizePoolName.Text;
+            if (string.IsNullOrWhiteSpace(poolName))
             {
                 MessageBox.Show("Must supply a prize pool name.");
             }
-            else if (this.PrizePools.Where(p => name.Equals(p.Name, StringComparison.OrdinalIgnoreCase)).Any())
+            else if (this.PrizePools.Where(p => poolName.Equals(p.Name, StringComparison.OrdinalIgnoreCase)).Any())
             {
                 MessageBox.Show("A prize pool of that name already exists.");
             }
             else
             {
-                lastTrackedPool = new PrizePool(name);
-                lastTrackedPool.Prizes.Add(new Prize() { Name = "Cool Prize" });
-                lastTrackedPool.Prizes.Add(new Prize() { Name = "Another Prize" });
+                lastTrackedPool = new PrizePool(poolName);
                 PrizePools.Add(lastTrackedPool);
-                await this.firebase.SetAsync("prizePools", PrizePools);
+
+                // Also create a new FireCollection of associated Prizes.
+                var prizeMapName = string.Format("prizePoolPrizes_{0}", poolName);
+                var newPrizeCollection = new FireCollection<Prize>(this.firebase, prizeMapName);
+                this.PrizeMap.Add(newPrizeCollection);
+                // TEST
+                newPrizeCollection.Add(new Prize() { Name = "Cool Prize" });
+                newPrizeCollection.Add(new Prize() { Name = "Another Prize" });
+            }
+        }
+
+        private void PrizePoolListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems != null && e.AddedItems.Count > 0 && e.AddedItems[0] is PrizePool)
+            {
+                var name = string.Format("prizePoolPrizes_{0}", (e.AddedItems[0] as PrizePool).Name);
+                SelectedPrizePoolPrizes = PrizeMap.Where(p => p.Name == name).FirstOrDefault();
+                PropertyChanged(sender, new PropertyChangedEventArgs("SelectedPrizePoolPrizes"));
             }
         }
     }

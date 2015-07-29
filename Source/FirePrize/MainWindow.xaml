@@ -17,7 +17,7 @@
                             <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click">Add Pool</Button>
                             <TextBox x:Name="newPrizePoolName" HorizontalAlignment="Stretch" />
                         </DockPanel>
-                        <ListBox x:Name="TestListBox" ItemsSource="{Binding PrizePools}">
+                        <ListBox x:Name="PrizePoolListBox" ItemsSource="{Binding PrizePools}" SelectionChanged="PrizePoolListBox_SelectionChanged">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}" />
