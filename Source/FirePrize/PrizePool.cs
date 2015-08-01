@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace FirePrize
 {
-    public class PrizePool
+    public class PrizePool : PropertyObservable
     {
         public PrizePool()
         {
-            this.Prizes = new List<Prize>();
             this.ID = Guid.NewGuid();
         }
 
@@ -21,10 +20,26 @@ namespace FirePrize
             this.Name = name;
         }
 
-        public string Name { get; set; }
-        public Guid ID { get; set; }
+        private string name;
+        public string Name
+        {
+            get { return name; }
+            set { SetProperty<string>(ref name, value); }
+        }
 
+        private Guid id;
+        public Guid ID
+        {
+            get { return id; }
+            set { SetProperty<Guid>(ref id, value); }
+        }
+
+        private FireCollection<Prize> prizes;
         [JsonIgnore]
-        public List<Prize> Prizes { get; set; }
+        public FireCollection<Prize> Prizes
+        {
+            get { return prizes; }
+            set { SetProperty<FireCollection<Prize>>(ref prizes, value); }
+        }
     }
 }

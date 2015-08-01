@@ -18,19 +18,13 @@ namespace FirePrize
     {
         private IFirebaseClient firebase;
 
-        public FireCollection<PrizePool> PrizePools { get; set; }
-        public List<FireCollection<Prize>> PrizeMap { get; set; }
-        public FireCollection<Prize> SelectedPrizePoolPrizes { get; set; }
+        public MainWindowContext Context { get { return this.DataContext as MainWindowContext; } }
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
         public MainWindow()
         {
-            this.PrizeMap = new List<FireCollection<Prize>>();
-
             InitializeComponent();
-
-            this.DataContext = this;
 
             // Using FirePrize_Scratch DB; You must create your own Firebase DB (free), and use it here.
             // TODO: Allow non-code reconfiguration, even for ClickOnce launchers.
@@ -41,7 +35,7 @@ namespace FirePrize
             };
             firebase = new FirebaseClient(config);
 
-            this.PrizePools = new FireCollection<PrizePool>(firebase, "prizePools");
+            this.Context.PrizePools = new FireCollection<PrizePool>(firebase, "prizePools");
         }
 
         public static PrizePool lastTrackedPool;
@@ -53,22 +47,22 @@ namespace FirePrize
             {
                 MessageBox.Show("Must supply a prize pool name.");
             }
-            else if (this.PrizePools.Where(p => poolName.Equals(p.Name, StringComparison.OrdinalIgnoreCase)).Any())
+            else if (this.Context.PrizePools.Where(p => poolName.Equals(p.Name, StringComparison.OrdinalIgnoreCase)).Any())
             {
                 MessageBox.Show("A prize pool of that name already exists.");
             }
             else
             {
                 lastTrackedPool = new PrizePool(poolName);
-                PrizePools.Add(lastTrackedPool);
-
+                this.Context.PrizePools.Add(lastTrackedPool);
+                
                 // Also create a new FireCollection of associated Prizes.
-                var prizeMapName = string.Format("prizePoolPrizes_{0}", poolName);
-                var newPrizeCollection = new FireCollection<Prize>(this.firebase, prizeMapName);
-                this.PrizeMap.Add(newPrizeCollection);
+                var prizesName = string.Format("prizePoolPrizes_{0}", poolName);
+                lastTrackedPool.Prizes = new FireCollection<Prize>(this.firebase, prizesName);
+
                 // TEST
-                newPrizeCollection.Add(new Prize() { Name = "Cool Prize" });
-                newPrizeCollection.Add(new Prize() { Name = "Another Prize" });
+                lastTrackedPool.Prizes.Add(new Prize() { Name = "Cool Prize" });
+                lastTrackedPool.Prizes.Add(new Prize() { Name = "Another Prize" });
             }
         }
 
@@ -76,10 +70,19 @@ namespace FirePrize
         {
             if (e.AddedItems != null && e.AddedItems.Count > 0 && e.AddedItems[0] is PrizePool)
             {
-                var name = string.Format("prizePoolPrizes_{0}", (e.AddedItems[0] as PrizePool).Name);
-                SelectedPrizePoolPrizes = PrizeMap.Where(p => p.Name == name).FirstOrDefault();
-                PropertyChanged(sender, new PropertyChangedEventArgs("SelectedPrizePoolPrizes"));
+                var pool = e.AddedItems[0] as PrizePool;
+                this.Context.SelectedPrizePool = pool;
+                if (pool.Prizes == null)
+                {
+                    var name = string.Format("prizePoolPrizes_{0}", pool.Name);
+                    pool.Prizes = new FireCollection<Prize>(firebase, name);
+                }
             }
+        }
+
+        private void PrizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

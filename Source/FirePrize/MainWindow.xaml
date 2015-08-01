@@ -1,9 +1,17 @@
-﻿<Window x:Class="FirePrize.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:FirePrize" x:Class="FirePrize.MainWindow"
         Title="MainWindow" Height="350" Width="525">
+    <Window.DataContext>
+        <local:MainWindowContext/>
+    </Window.DataContext>
     <Grid>
-        <TabControl>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="81*"/>
+            <ColumnDefinition Width="436*"/>
+        </Grid.ColumnDefinitions>
+        <TabControl Grid.ColumnSpan="2">
             <TabItem x:Name="prizePoolTab" Header="_Prize Pools">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -12,9 +20,9 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <DockPanel Grid.Column="0">
-                        <Label DockPanel.Dock="Top">Prize Pools</Label>
-                        <DockPanel DockPanel.Dock="Bottom">
-                            <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click">Add Pool</Button>
+                        <Label DockPanel.Dock="Top" Content="Prize Pools"/>
+                        <DockPanel x:Name="PrizePoolsControls" DockPanel.Dock="Bottom">
+                            <Button x:Name="newPrizePoolAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click" Content="Add Pool"/>
                             <TextBox x:Name="newPrizePoolName" HorizontalAlignment="Stretch" />
                         </DockPanel>
                         <ListBox x:Name="PrizePoolListBox" ItemsSource="{Binding PrizePools}" SelectionChanged="PrizePoolListBox_SelectionChanged">
@@ -25,24 +33,34 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </DockPanel>
-                    <StackPanel Grid.Column="1">
-                        <Label DockPanel.Dock="Top">Prizes</Label>
-                        
-                    </StackPanel>
-                    <StackPanel Grid.Column="2">
+                    <DockPanel Grid.Column="1">
+                        <Label DockPanel.Dock="Top" Content="Prizes"/>
+                        <DockPanel x:Name="PrizesControls" DockPanel.Dock="Bottom">
+                            <Button x:Name="newPrizeAdd" DockPanel.Dock="Right" Click="NewPrizePool_Click" Content="Add Prize"/>
+                            <TextBox x:Name="newPrizeName" HorizontalAlignment="Stretch" />
+                        </DockPanel>
+                        <ListBox x:Name="PrizeListBox" ItemsSource="{Binding PrizePoolListBox.CurrentSelection}" SelectionChanged="PrizeListBox_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                    <DockPanel Grid.Column="2">
+                        <Label DockPanel.Dock="Top" Content="Prize"/>
+                        <Label Content="Name:"/>
+                        <Label Content="{Binding Name}" />
+                        <Label Content="Name:"/>
 
-                    </StackPanel>
+                    </DockPanel>
                 </Grid>
             </TabItem>
             <TabItem x:Name="playersTab" Header="Pla_yers">
-                <StackPanel>
-                    
-                </StackPanel>
+                <StackPanel/>
             </TabItem>
             <TabItem x:Name="drawingTab" Header="Drawing">
-                <StackPanel>
-                    
-                </StackPanel>
+                <StackPanel/>
             </TabItem>
         </TabControl>
     </Grid>

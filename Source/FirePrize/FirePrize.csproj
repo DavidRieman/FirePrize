@@ -113,6 +113,7 @@
     </Reference>
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Printing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -132,6 +133,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="PropertyObservable.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -147,6 +149,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainWindowContext.cs" />
     <Compile Include="Prize.cs" />
     <Compile Include="PrizePool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
